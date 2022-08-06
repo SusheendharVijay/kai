@@ -22,7 +22,7 @@ fn run_script(script_path: &Path) -> Result<(), ScannerError> {
     let source_code = fs::read_to_string(script_path).unwrap();
     println!("source: {}", &source_code);
 
-    let mut scanner = Scanner::new(source_code.clone());
+    let mut scanner = Scanner::new(&source_code);
     scanner.scan_tokens()?;
     scanner.print_tokens();
     Ok(())

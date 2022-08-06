@@ -1,3 +1,7 @@
+use std::fmt::Display;
+
+use yansi::Paint;
+
 /// Token type enum
 #[derive(Debug)]
 pub enum TokenType {
@@ -14,8 +18,8 @@ pub enum TokenType {
     Slash,
     Star,
     // One or two char tokens
-    Bang,
-    BangEqual,
+    Not,
+    NotEqual,
     EqualEqual,
     Greater,
     GreaterEqual,
@@ -74,6 +78,18 @@ impl Token {
             self.token_type,
             &self.lexeme,
             self.literal.as_ref().unwrap_or(&"null".to_string())
+        )
+    }
+}
+
+impl Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "<{:?}: \'{}\' at line [{}]>",
+            Paint::blue(&self.token_type),
+            Paint::green(&self.lexeme),
+            Paint::yellow(&self.line)
         )
     }
 }
