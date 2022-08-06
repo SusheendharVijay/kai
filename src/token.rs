@@ -20,6 +20,7 @@ pub enum TokenType {
     // One or two char tokens
     Not,
     NotEqual,
+    Equal,
     EqualEqual,
     Greater,
     GreaterEqual,

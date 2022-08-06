@@ -1,4 +1,4 @@
-use std::{iter::Peekable, str::CharIndices, thread::current};
+use std::{iter::Peekable, str::CharIndices};
 use thiserror::Error;
 use yansi::Paint;
 
@@ -25,7 +25,7 @@ pub enum ScannerError {
 impl<'a> Scanner<'a> {
     pub fn new(source_code: &'a str) -> Self {
         Scanner {
-            source_code,
+            source_code: source_code.trim(),
             code: source_code.char_indices().peekable(),
             tokens: vec![],
             start: 0,
@@ -43,12 +43,18 @@ impl<'a> Scanner<'a> {
         }
 
         self.start = self.current;
-        self.add_token(TokenType::Eof, None);
+        self.tokens.push(Token {
+            token_type: TokenType::Eof,
+            lexeme: "".to_string(),
+            literal: None,
+            line: self.line,
+        });
+
         Ok(())
     }
 
     fn is_at_end(&self) -> bool {
-        self.current >= self.source_code.len()
+        self.current > self.source_code.chars().count() - 1
     }
 
     fn print_error(&self, start_index: usize, line_number: usize) {
@@ -109,10 +115,22 @@ impl<'a> Scanner<'a> {
                     Ok(self.add_token(TokenType::Slash, None))
                 }
             }
+            '=' => {
+                if let Some((_, '=')) = self.code.peek() {
+                    self.advance();
+                    Ok(self.add_token(TokenType::EqualEqual, None))
+                } else {
+                    Ok(self.add_token(TokenType::Equal, None))
+                }
+            }
+            '"' => self.tokenize_string(),
+            ' ' => Ok(()),
             '\n' => {
                 self.line += 1;
                 Ok(())
             }
+            '\r' => Ok(()),
+            '\t' => Ok(()),
             _ => {
                 self.has_error = true;
                 Ok(self.print_error(self.start, self.line))
@@ -131,6 +149,31 @@ impl<'a> Scanner<'a> {
             literal,
             line: self.line,
         })
+    }
+
+    fn tokenize_string(&mut self) -> Result<(), ScannerError> {
+        while let Some((_, val)) = self.code.peek() {
+            if *val == '\n' {
+                self.advance();
+                self.line += 1;
+            } else if *val == '"' {
+                self.advance();
+                self.add_token(TokenType::String, None);
+                return Ok(());
+            } else {
+                self.advance()
+            }
+        }
+        if let None = self.code.peek() {
+            println!(
+                "{}",
+                Paint::red(format!(
+                    "Unterminated string at index: {} and line :[{}]",
+                    &self.current, &self.line
+                ))
+            );
+        }
+        Ok(())
     }
 
     fn advance(&mut self) {
