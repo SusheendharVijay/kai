@@ -124,6 +124,7 @@ impl<'a> Scanner<'a> {
                 }
             }
             '"' => self.tokenize_string(),
+            num if num.is_numeric() => self.tokenize_number(),
             ' ' => Ok(()),
             '\n' => {
                 self.line += 1;
@@ -174,6 +175,25 @@ impl<'a> Scanner<'a> {
             );
         }
         Ok(())
+    }
+
+    fn tokenize_number(&mut self) -> Result<(), ScannerError> {
+        while self.code.peek().is_some() && self.code.peek().unwrap().1.is_numeric() {
+            self.advance()
+        }
+
+        if self.code.peek().is_some() && self.code.peek().unwrap().1 == '.' {
+            self.advance()
+        }
+
+        while self.code.peek().is_some() && self.code.peek().unwrap().1.is_numeric() {
+            self.advance()
+        }
+
+        self.add_token(TokenType::Number, None);
+
+        Ok(())
+        // 123.456
     }
 
     fn advance(&mut self) {
