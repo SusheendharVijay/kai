@@ -3,8 +3,8 @@ use std::fmt::Display;
 use yansi::Paint;
 
 /// Token type enum
-#[derive(Debug)]
-pub enum TokenType {
+#[derive(Debug, Clone)]
+pub enum TokenType<'a> {
     //Single char tokens
     LeftParen,
     RightParen,
@@ -28,8 +28,8 @@ pub enum TokenType {
     LessEqual,
     // literals
     Identifier,
-    String,
-    Number,
+    String(&'a str),
+    Number(f32),
     //Keywords
     And,
     For,
@@ -51,46 +51,43 @@ pub enum TokenType {
 
 /// Token struct
 #[derive(Debug)]
-pub struct Token {
-    pub token_type: TokenType,
-    pub lexeme: String,
-    pub literal: Option<String>,
+pub struct Token<'a> {
+    pub token_type: TokenType<'a>,
+    pub lexeme: &'a str,
     pub line: usize,
 }
 
-impl Token {
-    pub fn new(
-        token_type: TokenType,
-        lexeme: String,
-        literal: Option<String>,
-        line: usize,
-    ) -> Self {
+impl<'a> Token<'a> {
+    pub fn new(token_type: TokenType<'a>, lexeme: &'a str, line: usize) -> Self {
         Token {
             token_type,
             lexeme,
-            literal,
             line,
         }
     }
 
-    pub fn to_string(&self) -> String {
-        format!(
-            "{:?} {} {}",
-            self.token_type,
-            &self.lexeme,
-            self.literal.as_ref().unwrap_or(&"null".to_string())
+    // pub fn to_string(&self) -> String {}
+}
+
+impl<'a> Display for Token<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "<{}, {}: \'{}\' at line [{}]>",
+            Paint::yellow(&self.token_type),
+            Paint::blue("literal"),
+            Paint::green(&self.lexeme),
+            Paint::yellow(&self.line)
         )
     }
 }
 
-impl Display for Token {
+impl<'a> Display for TokenType<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "<{:?}: \'{}\' at line [{}]>",
-            Paint::blue(&self.token_type),
-            Paint::green(&self.lexeme),
-            Paint::yellow(&self.line)
-        )
+        match self {
+            TokenType::String(val) => write!(f, "String, lexeme:{}", Paint::green(val)),
+            TokenType::Number(val) => write!(f, "Number, lexeme:{}", Paint::green(val)),
+            _ => write!(f, "{:?}", self),
+        }
     }
 }

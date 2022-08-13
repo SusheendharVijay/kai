@@ -1,4 +1,4 @@
-use std::{iter::Peekable, str::CharIndices};
+use std::{collections::HashMap, iter::Peekable, str::CharIndices};
 use thiserror::Error;
 use yansi::Paint;
 
@@ -9,7 +9,8 @@ use crate::token::{Token, TokenType};
 pub struct Scanner<'a> {
     pub source_code: &'a str,
     code: Peekable<CharIndices<'a>>,
-    pub tokens: Vec<Token>,
+    pub tokens: Vec<Token<'a>>,
+    pub reserved: HashMap<&'a str, TokenType<'a>>,
     start: usize,
     current: usize,
     line: usize,
@@ -24,10 +25,28 @@ pub enum ScannerError {
 
 impl<'a> Scanner<'a> {
     pub fn new(source_code: &'a str) -> Self {
+        let mut reserved: HashMap<&str, TokenType<'a>> = HashMap::new();
+        reserved.insert("and", TokenType::And);
+        reserved.insert("or", TokenType::Or);
+        reserved.insert("for", TokenType::For);
+        reserved.insert("if", TokenType::If);
+        reserved.insert("else", TokenType::Else);
+        reserved.insert("while", TokenType::While);
+        reserved.insert("Nil", TokenType::Nil);
+        reserved.insert("class", TokenType::Class);
+        reserved.insert("return", TokenType::Return);
+        reserved.insert("super", TokenType::Super);
+        reserved.insert("var", TokenType::Var);
+        reserved.insert("print", TokenType::Print);
+        reserved.insert("this", TokenType::This);
+        reserved.insert("true", TokenType::True);
+        reserved.insert("false", TokenType::False);
+
         Scanner {
             source_code: source_code.trim(),
             code: source_code.char_indices().peekable(),
             tokens: vec![],
+            reserved,
             start: 0,
             current: 0,
             line: 1,
@@ -45,8 +64,7 @@ impl<'a> Scanner<'a> {
         self.start = self.current;
         self.tokens.push(Token {
             token_type: TokenType::Eof,
-            lexeme: "".to_string(),
-            literal: None,
+            lexeme: "",
             line: self.line,
         });
 
@@ -67,38 +85,38 @@ impl<'a> Scanner<'a> {
 
     fn scan_token(&mut self, c: char) -> Result<(), ScannerError> {
         match c {
-            ')' => Ok(self.add_token(TokenType::RightParen, None)),
-            '(' => Ok(self.add_token(TokenType::LeftParen, None)),
-            '{' => Ok(self.add_token(TokenType::LeftBrace, None)),
-            '}' => Ok(self.add_token(TokenType::RightBrace, None)),
-            ';' => Ok(self.add_token(TokenType::SemiColon, None)),
-            '.' => Ok(self.add_token(TokenType::Dot, None)),
-            '*' => Ok(self.add_token(TokenType::Star, None)),
-            '+' => Ok(self.add_token(TokenType::Plus, None)),
-            '-' => Ok(self.add_token(TokenType::Minus, None)),
-            ',' => Ok(self.add_token(TokenType::Comma, None)),
+            ')' => Ok(self.add_token(TokenType::RightParen)),
+            '(' => Ok(self.add_token(TokenType::LeftParen)),
+            '{' => Ok(self.add_token(TokenType::LeftBrace)),
+            '}' => Ok(self.add_token(TokenType::RightBrace)),
+            ';' => Ok(self.add_token(TokenType::SemiColon)),
+            '.' => Ok(self.add_token(TokenType::Dot)),
+            '*' => Ok(self.add_token(TokenType::Star)),
+            '+' => Ok(self.add_token(TokenType::Plus)),
+            '-' => Ok(self.add_token(TokenType::Minus)),
+            ',' => Ok(self.add_token(TokenType::Comma)),
             '!' => {
                 if let Some((_, '=')) = self.code.peek() {
                     self.advance();
-                    Ok(self.add_token(TokenType::NotEqual, None))
+                    Ok(self.add_token(TokenType::NotEqual))
                 } else {
-                    Ok(self.add_token(TokenType::Not, None))
+                    Ok(self.add_token(TokenType::Not))
                 }
             }
             '>' => {
                 if let Some((_, '=')) = self.code.peek() {
                     self.advance();
-                    Ok(self.add_token(TokenType::GreaterEqual, None))
+                    Ok(self.add_token(TokenType::GreaterEqual))
                 } else {
-                    Ok(self.add_token(TokenType::Greater, None))
+                    Ok(self.add_token(TokenType::Greater))
                 }
             }
             '<' => {
                 if let Some((_, '=')) = self.code.peek() {
                     self.advance();
-                    Ok(self.add_token(TokenType::LessEqual, None))
+                    Ok(self.add_token(TokenType::LessEqual))
                 } else {
-                    Ok(self.add_token(TokenType::Less, None))
+                    Ok(self.add_token(TokenType::Less))
                 }
             }
             '/' => {
@@ -112,19 +130,20 @@ impl<'a> Scanner<'a> {
                     }
                     Ok(())
                 } else {
-                    Ok(self.add_token(TokenType::Slash, None))
+                    Ok(self.add_token(TokenType::Slash))
                 }
             }
             '=' => {
                 if let Some((_, '=')) = self.code.peek() {
                     self.advance();
-                    Ok(self.add_token(TokenType::EqualEqual, None))
+                    Ok(self.add_token(TokenType::EqualEqual))
                 } else {
-                    Ok(self.add_token(TokenType::Equal, None))
+                    Ok(self.add_token(TokenType::Equal))
                 }
             }
             '"' => self.tokenize_string(),
             num if num.is_numeric() => self.tokenize_number(),
+            c if (c.is_alphabetic() || c == '_') => self.tokenize_identifier(),
             ' ' => Ok(()),
             '\n' => {
                 self.line += 1;
@@ -139,15 +158,18 @@ impl<'a> Scanner<'a> {
         }
     }
 
-    fn add_token(&mut self, token_type: TokenType, literal: Option<String>) {
+    fn add_token(&mut self, token_type: TokenType<'a>) {
+        let lexeme = self.source_code.get(self.start..self.current + 1).unwrap();
+
+        let token_type = match token_type {
+            TokenType::String(_) => TokenType::String(lexeme),
+            TokenType::Number(_) => TokenType::Number(lexeme.parse::<f32>().unwrap()),
+            _ => token_type,
+        };
+
         self.tokens.push(Token {
             token_type,
-            lexeme: self
-                .source_code
-                .get(self.start..self.current + 1)
-                .unwrap()
-                .to_string(),
-            literal,
+            lexeme,
             line: self.line,
         })
     }
@@ -159,7 +181,7 @@ impl<'a> Scanner<'a> {
                 self.line += 1;
             } else if *val == '"' {
                 self.advance();
-                self.add_token(TokenType::String, None);
+                self.add_token(TokenType::String(""));
                 return Ok(());
             } else {
                 self.advance()
@@ -190,10 +212,30 @@ impl<'a> Scanner<'a> {
             self.advance()
         }
 
-        self.add_token(TokenType::Number, None);
+        self.add_token(TokenType::Number(0.0));
 
         Ok(())
-        // 123.456
+    }
+
+    fn tokenize_identifier(&mut self) -> Result<(), ScannerError> {
+        self.advance();
+
+        while let Some((_, val)) = self.code.peek() {
+            if !val.is_alphanumeric() {
+                break;
+            }
+            self.advance()
+        }
+
+        let lexeme = self.source_code.get(self.start..self.current + 1).unwrap();
+
+        if let Some(token_type) = self.reserved.get(lexeme) {
+            self.add_token(token_type.clone())
+        } else {
+            self.add_token(TokenType::Identifier)
+        }
+
+        Ok(())
     }
 
     fn advance(&mut self) {

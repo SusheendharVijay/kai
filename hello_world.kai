@@ -5,3 +5,4 @@
 "saaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 asdflkjasdflkjlaskdfjlkajsdfl"
 123.456; "susheen is the best"
+for { var name = "Hello"; print "hello" }
