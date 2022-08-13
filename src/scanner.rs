@@ -129,6 +129,30 @@ impl<'a> Scanner<'a> {
                         };
                     }
                     Ok(())
+                } else if let Some((_, '*')) = self.code.peek() {
+                    println!("Ignoring comments at line: [{}]", self.line);
+                    // consume the "*"
+                    self.advance();
+                    /* Hllosdlfkjsldkfjsldfkjl*k */
+                    while let Some((_, val)) = self.code.peek() {
+                        if *val == '*' {
+                            self.advance();
+                            if let Some((_, '/')) = self.code.peek() {
+                                self.advance();
+                                return Ok(());
+                            }
+                        } else if *val == '\n' {
+                            self.line += 1;
+                            self.advance();
+                        } else {
+                            self.advance();
+                        }
+                    }
+
+                    if let None = self.code.peek() {
+                        println!("Unterminated comment at line: [{}]", self.line)
+                    }
+                    Ok(())
                 } else {
                     Ok(self.add_token(TokenType::Slash))
                 }
