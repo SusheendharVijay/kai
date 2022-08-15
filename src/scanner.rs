@@ -269,7 +269,7 @@ impl<'a> Scanner<'a> {
 
     pub fn print_tokens(&self) {
         for token in &self.tokens {
-            println!("{}", token)
+            println!("{:?}", token)
         }
     }
 }

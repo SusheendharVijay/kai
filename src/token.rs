@@ -3,7 +3,7 @@ use std::fmt::Display;
 use yansi::Paint;
 
 /// Token type enum
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TokenType<'a> {
     //Single char tokens
     LeftParen,
@@ -50,7 +50,7 @@ pub enum TokenType<'a> {
 }
 
 /// Token struct
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Token<'a> {
     pub token_type: TokenType<'a>,
     pub lexeme: &'a str,
@@ -85,8 +85,17 @@ impl<'a> Display for Token<'a> {
 impl<'a> Display for TokenType<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TokenType::String(val) => write!(f, "String, lexeme:{}", Paint::green(val)),
-            TokenType::Number(val) => write!(f, "Number, lexeme:{}", Paint::green(val)),
+            TokenType::String(val) => write!(f, "\"{}\"", Paint::green(val)),
+            TokenType::Number(val) => write!(f, "{}", Paint::yellow(val)),
+            TokenType::Plus => write!(f, "+"),
+            TokenType::Minus => write!(f, "-"),
+            TokenType::Star => write!(f, "*"),
+            // TokenType::Plus => write!(f, "+"),
+            // TokenType::Plus => write!(f, "+"),
+            // TokenType::Plus => write!(f, "+"),
+            // TokenType::Plus => write!(f, "+"),
+            // TokenType::Plus => write!(f, "+"),
+            // TokenType::Plus => write!(f, "+"),
             _ => write!(f, "{:?}", self),
         }
     }

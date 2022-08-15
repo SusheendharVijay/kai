@@ -1,8 +1,9 @@
 use std::{env, fs, io::Write, path::Path};
 
-mod scanner;
-mod token;
-use scanner::{Scanner, ScannerError};
+// mod scanner;
+// mod token;
+
+use ckai::scanner::{Scanner, ScannerError};
 
 fn main() -> Result<(), ScannerError> {
     let args = env::args().collect::<Vec<String>>();

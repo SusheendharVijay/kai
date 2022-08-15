@@ -1,15 +1,1 @@
-// this is a comment
-(( )){} // grouping stuff
-!*+-/=<> <= == // operators
-"susheen"!.};;;;;;"shanthi ; }{}{}" // string
-"saaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-asdflkjasdflkjlaskdfjlkajsdfl"
-123.456; "susheen is the best"
-for { var name = "Hello"; print "hello" }
-/* this is a comment
-    This is also a comment
-
-    This is also a comment
-
-
- */
+print "Hello world"
