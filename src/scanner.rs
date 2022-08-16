@@ -71,9 +71,9 @@ impl<'a> Scanner<'a> {
         Ok(())
     }
 
-    fn is_at_end(&self) -> bool {
-        self.current > self.source_code.chars().count() - 1
-    }
+    // fn is_at_end(&self) -> bool {
+    //     self.current > self.source_code.chars().count() - 1
+    // }
 
     fn print_error(&self, start_index: usize, line_number: usize) {
         let err = Paint::red(format!(
@@ -171,6 +171,7 @@ impl<'a> Scanner<'a> {
             ' ' => Ok(()),
             '\n' => {
                 self.line += 1;
+
                 Ok(())
             }
             '\r' => Ok(()),

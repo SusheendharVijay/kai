@@ -3,6 +3,7 @@ use std::{env, fs, io::Write, path::Path};
 // mod scanner;
 // mod token;
 
+use ckai::parser::Parser;
 use ckai::scanner::{Scanner, ScannerError};
 
 fn main() -> Result<(), ScannerError> {
@@ -26,6 +27,10 @@ fn run_script(script_path: &Path) -> Result<(), ScannerError> {
     let mut scanner = Scanner::new(&source_code);
     scanner.scan_tokens()?;
     scanner.print_tokens();
+    let mut parser = Parser::new(scanner.tokens);
+    let exp = parser.expression();
+    println!("Expression {}", exp);
+
     Ok(())
 }
 

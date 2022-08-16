@@ -1,4 +1,5 @@
 mod expression;
+pub mod parser;
 pub mod scanner;
 mod token;
 
@@ -26,8 +27,21 @@ mod tests {
         let b = Box::new(Expression::Literal(TokenType::Number(6.0)));
         let exp = Expression::Binary(a, TokenType::Plus, b);
         let una = Expression::Unary(TokenType::Minus, Box::new(exp));
-        let group = Expression::Grouping(Box::new(una));
 
-        println!("{}", group);
+        println!("{}", una);
+    }
+    #[test]
+    fn it_prints_rpn() {
+        let a = Box::new(Expression::Literal(TokenType::Number(1.0)));
+        let b = Box::new(Expression::Literal(TokenType::Number(2.0)));
+        let exp1 = Expression::Binary(a, TokenType::Plus, b);
+
+        let a = Box::new(Expression::Literal(TokenType::Number(4.0)));
+        let b = Box::new(Expression::Literal(TokenType::Number(3.0)));
+        let exp2 = Expression::Binary(a, TokenType::Minus, b);
+
+        let exp = Expression::Binary(Box::new(exp1), TokenType::Star, Box::new(exp2));
+
+        println!("{}", exp.print_rpn());
     }
 }

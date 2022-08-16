@@ -3,7 +3,7 @@ use std::fmt::Display;
 use yansi::Paint;
 
 /// Token type enum
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TokenType<'a> {
     //Single char tokens
     LeftParen,
@@ -50,7 +50,7 @@ pub enum TokenType<'a> {
 }
 
 /// Token struct
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Token<'a> {
     pub token_type: TokenType<'a>,
     pub lexeme: &'a str,
@@ -90,6 +90,7 @@ impl<'a> Display for TokenType<'a> {
             TokenType::Plus => write!(f, "+"),
             TokenType::Minus => write!(f, "-"),
             TokenType::Star => write!(f, "*"),
+            TokenType::Slash => write!(f, "/"),
             // TokenType::Plus => write!(f, "+"),
             // TokenType::Plus => write!(f, "+"),
             // TokenType::Plus => write!(f, "+"),
