@@ -24,17 +24,24 @@ fn run_script(script_path: &Path) -> Result<(), ScannerError> {
     let source_code = fs::read_to_string(script_path).unwrap();
     println!("source: {}", &source_code);
 
-    let mut scanner = Scanner::new(&source_code);
-    scanner.scan_tokens()?;
-    scanner.print_tokens();
-    let mut parser = Parser::new(scanner.tokens);
-    let exp = parser.expression();
-    println!("Expression {}", exp);
+    run( &source_code)?;
 
     Ok(())
 }
 
-fn run_prompt() {
+fn run(source_code:&str) -> Result<(),ScannerError> {
+
+    let mut scanner = Scanner::new(&source_code);
+    scanner.scan_tokens()?;
+    // scanner.print_tokens();
+    let mut parser = Parser::new(scanner.tokens);
+    let exp = parser.expression();
+    println!("Expression {}", exp);
+    Ok(())
+
+}
+
+fn run_prompt()  {
     println!("starting kai prompt");
     loop {
         let mut input = String::new();
@@ -45,10 +52,8 @@ fn run_prompt() {
         if input == "exit\n" {
             break;
         }
-        run(&input)
+        run(&input).unwrap()
     }
 }
 
-fn run(source_code: &String) {
-    println!("Running with code: {}", source_code)
-}
+

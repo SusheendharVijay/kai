@@ -17,9 +17,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn next(&self) -> Token<'a> {
-        self.tokens[self.curr_idx + 1]
-    }
 
     fn is_at_end(&self) -> bool {
         self.curr_idx >= self.tokens.len()
