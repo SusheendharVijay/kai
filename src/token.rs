@@ -17,6 +17,9 @@ pub enum TokenType<'a> {
     Plus,
     Slash,
     Star,
+    Question,
+    Colon,
+    NewLine,
     // One or two char tokens
     Not,
     NotEqual,

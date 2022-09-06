@@ -17,7 +17,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-
     fn is_at_end(&self) -> bool {
         self.curr_idx >= self.tokens.len()
     }
@@ -31,11 +30,36 @@ impl<'a> Parser<'a> {
     }
 
     pub fn expression(&mut self) -> Expression<'a> {
-        self.equality()
+        self.ternary()
+    }
+
+    fn ternary(&mut self) -> Expression<'a> {
+        let exp = self.equality();
+        if self.is_at_end() {
+            return exp;
+        }
+        if self.current().token_type == TokenType::Question {
+            self.curr_idx += 1;
+            if self.is_at_end() {
+                panic!("No expression found after '?' operator, expected valid ternary expression");
+            } else {
+                let exp1 = self.equality();
+                if self.current().token_type == TokenType::Colon {
+                    self.curr_idx += 1;
+                    let exp2 = self.equality();
+                    return Expression::Ternary(Box::new(exp), Box::new(exp1), Box::new(exp2));
+                } else {
+                    panic!("Expected valid ternary expression, expected :");
+                }
+            }
+        }
+
+        exp
     }
 
     fn equality(&mut self) -> Expression<'a> {
         let mut exp = self.comparison();
+
         if self.is_at_end() {
             return exp;
         }
@@ -43,7 +67,6 @@ impl<'a> Parser<'a> {
         while match self.current().token_type {
             TokenType::NotEqual | TokenType::EqualEqual => {
                 self.curr_idx += 1;
-
                 true
             }
             _ => false,
@@ -144,9 +167,15 @@ impl<'a> Parser<'a> {
             TokenType::LeftParen => {
                 let exp = self.equality();
 
-                Expression::Grouping(Box::new(exp))
+                if self.current().token_type != TokenType::RightParen {
+                    panic!("Expected ')' at line: {}", self.prev().line);
+                } else {
+                    self.curr_idx += 1;
+                    Expression::Grouping(Box::new(exp))
+                }
             }
-            _ => Expression::Literal(TokenType::Eof),
+            _ if self.is_at_end() => Expression::Literal(TokenType::Eof),
+            _ => panic!("Unexpected token at line: {}", self.prev().line),
         }
     }
 }

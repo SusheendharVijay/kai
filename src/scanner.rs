@@ -103,6 +103,8 @@ impl<'a> Scanner<'a> {
                     Ok(self.add_token(TokenType::Not))
                 }
             }
+            '?' => Ok(self.add_token(TokenType::Question)),
+            ':' => Ok(self.add_token(TokenType::Colon)),
             '>' => {
                 if let Some((_, '=')) = self.code.peek() {
                     self.advance();
@@ -171,8 +173,7 @@ impl<'a> Scanner<'a> {
             ' ' => Ok(()),
             '\n' => {
                 self.line += 1;
-
-                Ok(())
+                Ok(self.add_token(TokenType::NewLine))
             }
             '\r' => Ok(()),
             '\t' => Ok(()),
@@ -184,7 +185,10 @@ impl<'a> Scanner<'a> {
     }
 
     fn add_token(&mut self, token_type: TokenType<'a>) {
-        let lexeme = self.source_code.get(self.start..self.current + 1).unwrap();
+        let lexeme = self
+            .source_code
+            .get(self.start..self.current + 1)
+            .unwrap_or("\n");
 
         let token_type = match token_type {
             TokenType::String(_) => TokenType::String(lexeme),

@@ -5,6 +5,8 @@ mod token;
 
 #[cfg(test)]
 mod tests {
+    use crate::parser::Parser;
+
     use super::expression::*;
     use super::scanner::*;
     use super::token::*;
@@ -43,5 +45,20 @@ mod tests {
         let exp = Expression::Binary(Box::new(exp1), TokenType::Star, Box::new(exp2));
 
         println!("{}", exp.print_rpn());
+    }
+
+    #[test]
+    fn it_parses_ternary() {
+        let mut scanner = Scanner::new("1 ? 2 : 3");
+
+        let _ = scanner.scan_tokens();
+        let exp = Parser::new(scanner.tokens).expression();
+
+        let one = Box::new(Expression::Literal(TokenType::Number(1.0)));
+        let two = Box::new(Expression::Literal(TokenType::Number(2.0)));
+        let three = Box::new(Expression::Literal(TokenType::Number(3.0)));
+        let ternary = Expression::Ternary(one, two, three);
+
+        assert_eq!(ternary, exp)
     }
 }

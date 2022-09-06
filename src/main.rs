@@ -4,9 +4,12 @@ use std::{env, fs, io::Write, path::Path};
 // mod token;
 
 use ckai::parser::Parser;
-use ckai::scanner::{Scanner, ScannerError};
+use ckai::scanner::Scanner;
+use color_eyre::eyre::Result;
 
-fn main() -> Result<(), ScannerError> {
+fn main() -> Result<()> {
+    color_eyre::install()?;
+
     let args = env::args().collect::<Vec<String>>();
 
     if args.len() > 2 {
@@ -14,46 +17,42 @@ fn main() -> Result<(), ScannerError> {
     } else if args.len() == 2 {
         run_script(Path::new(args[1].as_str()))?;
     } else {
-        run_prompt()
+        run_prompt()?
     }
 
     Ok(())
 }
 
-fn run_script(script_path: &Path) -> Result<(), ScannerError> {
+fn run_script(script_path: &Path) -> Result<()> {
     let source_code = fs::read_to_string(script_path).unwrap();
     println!("source: {}", &source_code);
-
-    run( &source_code)?;
+    run(&source_code)?;
 
     Ok(())
 }
 
-fn run(source_code:&str) -> Result<(),ScannerError> {
-
+fn run(source_code: &str) -> Result<()> {
     let mut scanner = Scanner::new(&source_code);
     scanner.scan_tokens()?;
-    // scanner.print_tokens();
+    scanner.print_tokens();
     let mut parser = Parser::new(scanner.tokens);
     let exp = parser.expression();
     println!("Expression {}", exp);
     Ok(())
-
 }
 
-fn run_prompt()  {
+fn run_prompt() -> Result<()> {
     println!("starting kai prompt");
     loop {
         let mut input = String::new();
         print!("kai> ");
-        let _ = std::io::stdout().flush().unwrap();
-        std::io::stdin().read_line(&mut input).unwrap();
+        let _ = std::io::stdout().flush()?;
+        std::io::stdin().read_line(&mut input)?;
 
         if input == "exit\n" {
             break;
         }
-        run(&input).unwrap()
+        run(&input)?
     }
+    Ok(())
 }
-
-
